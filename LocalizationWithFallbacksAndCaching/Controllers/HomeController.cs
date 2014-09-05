@@ -13,6 +13,9 @@ namespace LocalizationWithFallbacksAndCaching.Controllers
 
         public ActionResult Index()
         {
+            
+
+
             return View();
         }
 
