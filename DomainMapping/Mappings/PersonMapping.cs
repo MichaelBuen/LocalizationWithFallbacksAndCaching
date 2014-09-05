@@ -1,4 +1,5 @@
 ﻿using Domain;
+using NHibernate.Mapping.ByCode;
 using NHibernate.Mapping.ByCode.Conformist;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,12 @@ namespace DomainMapping.Mappings
     {
         public PersonMapping()
         {
+            Cache(x => 
+            {
+                x.Usage(CacheUsage.ReadWrite);
+                x.Region("Person");
+            });
+
             Id(x => x.PersonId);
             Property(x => x.FirstName);
             Property(x => x.LastName);
