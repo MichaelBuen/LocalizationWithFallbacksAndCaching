@@ -19,7 +19,7 @@ namespace TestTheSecondLevelCache
             Console.WriteLine("Test Simplest Caching");
 
             var sf = DomainMapping.Mapper.BuildSessionFactory();
-
+            
 
             using(var session = sf.OpenSession())
             using(var tx = session.BeginTransaction())
