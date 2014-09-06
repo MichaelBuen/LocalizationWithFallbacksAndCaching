@@ -14,14 +14,6 @@ namespace TestTheSecondLevelCache
     public class TheUnitTest
     {
 
-   
-
-        [TestMethod]
-        public void Test()
-        {
-
-        }
-
         [TestMethod]
         public void Test_Simplest_Caching()
         {
@@ -41,6 +33,151 @@ namespace TestTheSecondLevelCache
 
                 var list = session.Query<Person>().Cacheable().ToList();                
             }
+
+
+        }
+
+
+        [TestMethod]
+        public void Test_Query_Caching_Compare_This_To_Entity_Caching()
+        {
+
+            var sf = Common.BuildSessionFactory();
+            
+            Action query = delegate
+            {
+
+                using (var session = sf.OpenSession())
+                using (var tx = session.BeginTransaction())
+                {
+                    Console.WriteLine("Query 1");
+                    var person = session.Query<Person>().Where(x => x.PersonId == 1).Cacheable().Single();
+                }
+
+                using (var session = sf.OpenSession())
+                using (var tx = session.BeginTransaction())
+                {
+
+                    Console.WriteLine("Query 2");
+                    var person = session.Query<Person>().Where(x => x.PersonId == 2).Cacheable().Single();
+                }
+
+
+                using (var session = sf.OpenSession())
+                using (var tx = session.BeginTransaction())
+                {
+                    Console.WriteLine("Query 3");
+                    var person = session.Query<Person>().Where(x => x.PersonId == 1).Cacheable().Single();
+                }
+
+                using (var session = sf.OpenSession())
+                using (var tx = session.BeginTransaction())
+                {
+                    Console.WriteLine("Query 4");
+                    var person = session.Query<Person>().Where(x => x.PersonId == 2).Cacheable().Single();
+                }
+
+            };
+
+
+            query();
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Update");
+                var p = session.Get<Person>(1);
+                p.FirstName = "ZX-" + p.FirstName;
+                session.Save(p);
+                tx.Commit();
+            }
+
+
+            query();
+
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Assert");
+                var p = session.Get<Person>(1);
+                Assert.AreEqual("ZX-John", p.FirstName);
+            }
+
+
+        }
+
+
+        [TestMethod]
+        public void Test_Entity_Caching_Compare_This_To_Query_Caching()
+        {
+
+            var sf = Common.BuildSessionFactory();
+
+            Action query = delegate
+            {
+
+                using (var session = sf.OpenSession())
+                using (var tx = session.BeginTransaction())
+                {
+                    Console.WriteLine("Query 1");
+                    var person = session.Get<Person>(1);
+                }
+
+                using (var session = sf.OpenSession())
+                using (var tx = session.BeginTransaction())
+                {
+
+                    Console.WriteLine("Query 2");
+                    var person = session.Get<Person>(2);
+                }
+
+
+                using (var session = sf.OpenSession())
+                using (var tx = session.BeginTransaction())
+                {
+                    Console.WriteLine("Query 3");
+                    var person = session.Get<Person>(1);
+                }
+
+                using (var session = sf.OpenSession())
+                using (var tx = session.BeginTransaction())
+                {
+                    Console.WriteLine("Query 4");
+                    var person = session.Get<Person>(2);
+                }
+
+            };
+
+
+            query();
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Update");
+                var p = session.Get<Person>(1);
+                p.FirstName = "ZX-" + p.FirstName;
+                session.Save(p);
+                tx.Commit();
+            }
+
+
+            query();
+
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Assert");
+                var p = session.Get<Person>(1);
+                Assert.AreEqual("ZX-John", p.FirstName);
+            }
+
+
+
+
+
         }
 
 
@@ -456,9 +593,9 @@ namespace TestTheSecondLevelCache
         }
 
 
-  
+        
 
-    }
+    }//class
 
 
 }

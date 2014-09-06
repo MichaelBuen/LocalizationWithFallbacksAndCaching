@@ -66,7 +66,13 @@ namespace DomainMapping
             cfg.Cache(x =>
             {
 
-                x.Provider<NHibernate.Caches.SysCache.SysCacheProvider>();                    
+                // This is more stable in unit testing
+                x.Provider<NHibernate.Cache.HashtableCacheProvider>();       
+
+                // I don't know why SysCacheProvider has problem on simultaneous unit testing, 
+                // might be SysCacheProvider is just giving one session factory, so simultaneous test see each other caches
+                // This solution doesn't work: http://stackoverflow.com/questions/700043/mstest-executing-all-my-tests-simultaneously-breaks-tests-what-to-do
+                // x.Provider<NHibernate.Caches.SysCache.SysCacheProvider>();                    
                 
 
                     
