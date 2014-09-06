@@ -196,8 +196,7 @@ namespace TestTheSecondLevelCache
             using (var session = sf.OpenSession())
             using (var tx = session.BeginTransaction())
             {
-                Console.WriteLine("Query 2");
-                // the Evict forces the cached query to re-fetch the Person #1                
+                Console.WriteLine("Query 2");                
                 var list = session.Query<Person>().OrderBy(x => x.FirstName).Cacheable().ToList();
                 Assert.AreEqual("Paul", list[0].FirstName);
             }
