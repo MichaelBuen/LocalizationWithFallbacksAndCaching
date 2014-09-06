@@ -142,7 +142,7 @@ namespace TestTheSecondLevelCache
             using (var tx = session.BeginTransaction())
             {
                 Console.WriteLine("Query 2");
-                // this Order query is oblivous to changes on Person entity, hence this will not requery the Order with new sorting, and then this will return stale cache
+                // this Order query is oblivous to stateles changes on Person entity, hence this will not requery the Order with new sorting, and then this will return stale cache
                 var list = session.Query<Order>().OrderBy(x => x.Person.FirstName).Cacheable().ToList();
                 Assert.AreEqual("Paul", list[0].Person.FirstName);
                 Assert.AreEqual("ZX-John", list[1].Person.FirstName);

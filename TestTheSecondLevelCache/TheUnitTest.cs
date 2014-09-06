@@ -348,6 +348,114 @@ namespace TestTheSecondLevelCache
 
         }
 
+
+
+        [TestMethod]
+        public void Test_Caching_NoPagingOfDependentTable_IfStale_WhenReferencedTableIsUpdated()
+        {
+
+
+
+            var sf = Common.BuildSessionFactory();
+
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Query All Person"); // think dropdown
+                var list = session.Query<Person>().OrderBy(x => x.FirstName).Cacheable().ToList();
+            }
+
+
+
+
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Query 1");                
+                var list = session.Query<Order>().OrderBy(x => x.Person.FirstName).Cacheable().ToList();
+             
+            }
+
+
+
+
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Update");
+
+                // Gets the value the DB
+                var p = session.Get<Person>(1);
+                p.FirstName = "ZX-" + p.FirstName;
+                session.Update(p);
+                tx.Commit();
+
+
+                // sf.Evict(typeof(Person), 2);
+
+            }
+
+
+
+
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Query 2");                
+                // NHibernate is smart enough to detect that this query is dependent on Person(e.g., OrderBy(x=>x.Person.FirstName)
+                // Hence, the changes on the person above makes NHibernate re-issue a database query
+                var list = session.Query<Order>().OrderBy(x => x.Person.FirstName)
+                    .Select(x => new { x.OrderId, x.OrderDate, Person = session.Get<Person>(x.Person.PersonId) });                    
+                //var list = session.Query<Order>().OrderBy(x => x.Person.FirstName).Select(x => new { x.OrderId, x.OrderDate, x.Person.FirstName });
+                Console.WriteLine("Enumeratingx");
+                //Assert.AreEqual("Paul", list[0].Person.FirstName); // Paul will be the first one now, this will get from 2nd level cache (caused session.Query<Person>().Cacheable()
+                //Assert.AreEqual("ZX-John", list[1].Person.FirstName); // same as above
+                //Assert.AreEqual("ZZZ", list[2].Person.FirstName); // same as above
+
+
+                int i = 0;
+                foreach (var item in list)
+                {
+                    //var person = session.Get<Person>(item.PersonId);
+                    if (i == 0)
+                        Assert.AreEqual("Paul", item.Person.FirstName);
+                    else if (i == 1)
+                        Assert.AreEqual("ZX-John", item.Person.FirstName);
+                    else if (i == 2)
+                        Assert.AreEqual("ZZZ", item.Person.FirstName);
+
+                    Console.WriteLine("Order Id: {0}\nOrder Date: {1}\nCountry: {2} {3}", item.OrderId, item.OrderDate, item.Person.FirstName, item.Person.LastName);
+
+                    ++i;
+                }
+            }
+
+
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Query 3");                
+                // get all the Person again from the database, a Person was modified
+                var list = session.Query<Person>().OrderBy(x => x.FirstName).Cacheable().ToList();            
+            }
+
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Query 4");
+                // the query is already in cache, no query issued
+                var list = session.Query<Person>().OrderBy(x => x.FirstName).Cacheable().ToList();
+            }
+
+        }
+
+
   
 
     }

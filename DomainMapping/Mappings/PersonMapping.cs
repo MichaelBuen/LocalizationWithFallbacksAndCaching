@@ -15,8 +15,7 @@ namespace DomainMapping.Mappings
         {
             Cache(x => 
             {
-                x.Usage(CacheUsage.ReadWrite);
-                x.Region("Reference");
+                x.Usage(CacheUsage.ReadWrite);                
             });
 
             Id(x => x.PersonId);
