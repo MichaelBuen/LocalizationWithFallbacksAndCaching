@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Mapper.cs" />
+    <Compile Include="Mappings\OrderMapping.cs" />
     <Compile Include="Mappings\PersonMapping.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

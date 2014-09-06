@@ -33,7 +33,8 @@ namespace DomainMapping
 
             mapper.AddMappings(new[]
                 {
-                    typeof(PersonMapping)                    
+                    typeof(PersonMapping),
+                    typeof(OrderMapping)
                 });
 
 
@@ -65,7 +66,6 @@ namespace DomainMapping
             cfg.Cache(x =>
             {
 
-                
                 x.Provider<NHibernate.Caches.SysCache.SysCacheProvider>();                    
                 
 

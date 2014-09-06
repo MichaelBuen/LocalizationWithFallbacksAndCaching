@@ -13,11 +13,20 @@ namespace TestTheSecondLevelCache
     [TestClass]
     public class TheUnitTest
     {
+
+   
+
+        [TestMethod]
+        public void Test()
+        {
+
+        }
+
         [TestMethod]
         public void Test_Simplest_Caching()
         {
             
-            var sf = DomainMapping.Mapper.BuildSessionFactory();
+            var sf = Common.BuildSessionFactory();
             
 
             using(var session = sf.OpenSession())
@@ -38,7 +47,7 @@ namespace TestTheSecondLevelCache
         [TestMethod]
         public void Test_Caching_With_Same_OrderBy()
         {
-            var sf = DomainMapping.Mapper.BuildSessionFactory();
+            var sf = Common.BuildSessionFactory();
 
             // I don't know why this problem says the second query with just different OrderBy from the first query receives cached results of first query
             // http://stackoverflow.com/questions/10725241/nhibernate-retrieves-cached-query-results-even-though-the-order-by-clause-differ
@@ -65,7 +74,7 @@ namespace TestTheSecondLevelCache
         [TestMethod]
         public void Test_Caching_With_Different_OrderBy()
         {
-            var sf = DomainMapping.Mapper.BuildSessionFactory();
+            var sf = Common.BuildSessionFactory();
 
             // I don't know why this problem says the second query with just different OrderBy from the first query receives cached results of first query
             // http://stackoverflow.com/questions/10725241/nhibernate-retrieves-cached-query-results-even-though-the-order-by-clause-differ
@@ -92,7 +101,7 @@ namespace TestTheSecondLevelCache
         [TestMethod]
         public void Test_Evicting_Object()
         {
-            var sf = DomainMapping.Mapper.BuildSessionFactory();
+            var sf = Common.BuildSessionFactory();
 
             using (var session = sf.OpenSession())
             using (var tx = session.BeginTransaction())
@@ -121,7 +130,7 @@ namespace TestTheSecondLevelCache
         [TestMethod]
         public void Test_Paging_IfStale_When_Updated()
         {
-            var sf = DomainMapping.Mapper.BuildSessionFactory();
+            var sf = Common.BuildSessionFactory();
 
             using (var session = sf.OpenStatelessSession())
             using (var tx = session.BeginTransaction())
@@ -136,7 +145,7 @@ namespace TestTheSecondLevelCache
             using (var session = sf.OpenSession())
             using (var tx = session.BeginTransaction())
             {
-                Console.WriteLine("Query 1xxx");
+                Console.WriteLine("Query 1");
                 var list = session.Query<Person>().OrderBy(x => x.FirstName).Skip(0).Take(100).Cacheable().ToList();
             }
 
@@ -164,22 +173,14 @@ namespace TestTheSecondLevelCache
         [TestMethod]
         public void Test_NoPaging_IfStale_When_Updated()
         {
-            var sf = DomainMapping.Mapper.BuildSessionFactory();
+            var sf = Common.BuildSessionFactory();
 
-            using (var session = sf.OpenStatelessSession())
-            using (var tx = session.BeginTransaction())
-            {
-                Console.WriteLine("Stateless update");
-                var p = session.Get<Person>(1);
-                p.FirstName = "John";
-                session.Update(p);
-                tx.Commit();
-            }
+    
 
             using (var session = sf.OpenSession())
             using (var tx = session.BeginTransaction())
             {
-                Console.WriteLine("Query 1xxx");
+                Console.WriteLine("Query 1");
                 var list = session.Query<Person>().OrderBy(x => x.FirstName).Cacheable().ToList();
             }
 
@@ -211,7 +212,7 @@ namespace TestTheSecondLevelCache
 
 
 
-            var sf = DomainMapping.Mapper.BuildSessionFactory();
+            var sf = Common.BuildSessionFactory();
 
 
 
@@ -232,8 +233,8 @@ namespace TestTheSecondLevelCache
             using (var session = sf.OpenSession())
             using (var tx = session.BeginTransaction())
             {
-                Console.WriteLine("Query 1xxx");
-                var list = session.Query<Person>().OrderBy(x => x.FirstName).CacheRegion("Person").Cacheable().ToList();
+                Console.WriteLine("Query 1");
+                var list = session.Query<Person>().OrderBy(x => x.FirstName).CacheRegion("Reference").Cacheable().ToList();
             }
 
             using (var session = sf.OpenStatelessSession())
@@ -246,20 +247,109 @@ namespace TestTheSecondLevelCache
                 tx.Commit();
 
                 
-                sf.EvictQueries("Person");                
+                sf.EvictQueries("Reference");                
+            }
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Query 2");                
+                var list = session.Query<Person>().OrderBy(x => x.FirstName).CacheRegion("Reference").Cacheable().ToList();
+                Assert.AreEqual("Paul", list[0].FirstName);
+            }
+
+        }
+
+        
+
+
+        [TestMethod]
+        public void Test_NoPagingOfDependentTable_IfStale_WhenReferencedTableIsUpdatedOutside()
+        {
+
+
+
+            var sf = Common.BuildSessionFactory();
+
+
+
+
+
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Query 1");
+                var list = session.Query<Order>().OrderBy(x => x.Person.FirstName).CacheRegion("Reference").Cacheable().ToList();
+            }
+
+            using (var session = sf.OpenStatelessSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Stateless update");
+                var p = session.Get<Person>(1);
+                p.FirstName = "ZX-" + p.FirstName;
+                session.Update(p);
+                tx.Commit();
+
+
+                sf.EvictQueries("Reference");
             }
 
             using (var session = sf.OpenSession())
             using (var tx = session.BeginTransaction())
             {
                 Console.WriteLine("Query 2");
-                // the Evict ignores the cached query, and it issues another full query on Person table, then it re-fetch the Person #1                
-                var list = session.Query<Person>().OrderBy(x => x.FirstName).CacheRegion("Person").Cacheable().ToList();
-                Assert.AreEqual("Paul", list[0].FirstName);
+                var list = session.Query<Order>().OrderBy(x => x.Person.FirstName).CacheRegion("Reference").Cacheable().ToList();
+                Assert.AreEqual("Paul", list[0].Person.FirstName);                
             }
 
         }
 
+
+        [TestMethod]
+        public void Test_NoCaching_NoPagingOfDependentTable_IfStale_WhenReferencedTableIsUpdatedOutside()
+        {
+
+
+
+            var sf = Common.BuildSessionFactory();
+
+
+
+
+
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Query 1");
+                var list = session.Query<Order>().OrderBy(x => x.Person.FirstName).Fetch(x => x.Person).ToList();
+            }
+
+            using (var session = sf.OpenStatelessSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Stateless update");
+                var p = session.Get<Person>(1);
+                p.FirstName = "ZX-" + p.FirstName;
+                session.Update(p);
+                tx.Commit();
+                
+            }
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Query 2");
+                var list = session.Query<Order>().OrderBy(x => x.Person.FirstName).Fetch(x => x.Person).ToList();
+                Assert.AreEqual("Paul", list[0].Person.FirstName);
+                Assert.AreEqual("ZX-John", list[1].Person.FirstName);
+            }
+
+        }
+
+  
 
     }
 
