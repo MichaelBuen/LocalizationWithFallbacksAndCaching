@@ -209,8 +209,45 @@ namespace TestTheSecondLevelCache
                 Assert.AreEqual("Paul", person.FirstName);
                 
             }
+        }
 
 
+        [TestMethod]
+        public void Test_Query_Caching_With_Fetch_Caching_With_Main_Table_Updated()
+        {
+
+            var sf = Common.BuildSessionFactory();
+
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Query");
+                DomainMapping.Mapper.NHibernateSQL = "";
+                var list = session.Query<Order>().Fetch(x => x.Person).OrderBy(x => x.OrderId).ToList(); // Fetch put the Person in entity cache
+
+                list[0].Comment = string.IsNullOrWhiteSpace(list[0].Comment) ? "blah" : "";
+
+                var listAgain = session.Query<Order>().OrderBy(x => x.OrderId).ToList();
+
+
+                tx.Commit();
+            }
+
+
+
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Get");
+                DomainMapping.Mapper.NHibernateSQL = "";
+                var person = session.Get<Person>(2);
+
+                Assert.AreEqual("", DomainMapping.Mapper.NHibernateSQL);
+                Assert.AreEqual("Paul", person.FirstName);
+
+            }
         }
 
 
