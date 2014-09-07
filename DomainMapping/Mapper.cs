@@ -14,7 +14,8 @@ namespace DomainMapping
 {
     public static class Mapper
     {
-
+        
+        
         static NHibernate.ISessionFactory _sessionFactory = Mapper.BuildSessionFactory();
 
 
@@ -83,9 +84,11 @@ namespace DomainMapping
                 x.UseQueryCache = true;
             });
 
-
+            cfg.SetInterceptor(new NHSQLInterceptor());
 
             var sf = cfg.BuildSessionFactory();
+                                    
+            
 
 
             //using (var file = new System.IO.FileStream(@"c:\x\ddl.txt",
@@ -99,7 +102,27 @@ namespace DomainMapping
 
             return sf;
         }
+
+        public class NHSQLInterceptor : EmptyInterceptor, IInterceptor
+        {
+            // http://stackoverflow.com/questions/2134565/how-to-configure-fluent-nhibernate-to-output-queries-to-trace-or-debug-instead-o
+            public override NHibernate.SqlCommand.SqlString OnPrepareStatement(NHibernate.SqlCommand.SqlString sql)
+            {
+
+                Mapper.NHibernateSQL = sql.ToString();
+                return sql;
+            }
+
+        }
+
+
+
+
+        public static string NHibernateSQL { get; set; }
+
+
     }
+
 
     
 }

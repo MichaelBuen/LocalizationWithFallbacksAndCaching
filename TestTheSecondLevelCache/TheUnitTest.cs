@@ -180,6 +180,40 @@ namespace TestTheSecondLevelCache
 
         }
 
+        [TestMethod]
+        public void Test_Query_Caching_With_Fetch_Caching()
+        {
+
+            var sf = Common.BuildSessionFactory();
+
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {
+                Console.WriteLine("Query");
+                DomainMapping.Mapper.NHibernateSQL = "";
+                var list = session.Query<Order>().Fetch(x => x.Person).ToList(); // Fetch put the Person in entity cache
+            }
+
+
+
+
+            using (var session = sf.OpenSession())
+            using (var tx = session.BeginTransaction())
+            {                
+                Console.WriteLine("Get");
+                DomainMapping.Mapper.NHibernateSQL = "";
+                var person = session.Get<Person>(2);
+
+                Assert.AreEqual("", DomainMapping.Mapper.NHibernateSQL);
+                Assert.AreEqual("Paul", person.FirstName);
+                
+            }
+
+
+        }
+
+
 
         [TestMethod]
         public void Test_Caching_With_Same_OrderBy()
@@ -578,7 +612,7 @@ namespace TestTheSecondLevelCache
             {
                 Console.WriteLine("Query 3");                
                 // get all the Person again from the database, a Person was modified
-                var list = session.Query<Person>().OrderBy(x => x.FirstName).Cacheable().ToList();            
+                var list = session.Query<Person>().OrderBy(x => x.FirstName).Cacheable().ToList();                
             }
 
 
@@ -591,11 +625,12 @@ namespace TestTheSecondLevelCache
             }
 
         }
-
-
         
 
     }//class
+
+
+
 
 
 }
