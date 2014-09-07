@@ -15,7 +15,7 @@ namespace TestTheSecondLevelCache
         // public static object LockObject = new object();
 
 
-        // Just need to change the cache provider to Hashtable on unit testing
+        // Just need to change the cache provider to HashtableCacheProvider on unit testing, it's more predictable http://stackoverflow.com/questions/4297934/why-is-nhibernate-cache-hashtablecacheprovider-not-intended-for-production-use#comment4666523_4298483
         // x.Provider<NHibernate.Cache.HashtableCacheProvider>();  
 
 
@@ -23,7 +23,7 @@ namespace TestTheSecondLevelCache
 
         public static ISessionFactory BuildSessionFactory()
         {
-            var sf = DomainMapping.Mapper.BuildSessionFactory();
+            var sf = DomainMapping.Mapper.BuildSessionFactory(useUnitTest: true);
 
             using (var session = sf.OpenStatelessSession())
             using (var tx = session.BeginTransaction())

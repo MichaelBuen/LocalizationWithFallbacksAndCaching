@@ -27,7 +27,7 @@ namespace DomainMapping
 
         
         // Call this on unit testing, so we can test caching on each test method independently
-        public static NHibernate.ISessionFactory BuildSessionFactory()
+        public static NHibernate.ISessionFactory BuildSessionFactory(bool useUnitTest = false)
         {
             var mapper = new NHibernate.Mapping.ByCode.ModelMapper();
 
@@ -68,12 +68,17 @@ namespace DomainMapping
             {
 
                 // This is more stable in unit testing
-                x.Provider<NHibernate.Cache.HashtableCacheProvider>();       
+                if (!useUnitTest)
+                    x.Provider<NHibernate.Caches.SysCache.SysCacheProvider>();                    
 
                 // I don't know why SysCacheProvider has problem on simultaneous unit testing, 
                 // might be SysCacheProvider is just giving one session factory, so simultaneous test see each other caches
                 // This solution doesn't work: http://stackoverflow.com/questions/700043/mstest-executing-all-my-tests-simultaneously-breaks-tests-what-to-do
-                // x.Provider<NHibernate.Caches.SysCache.SysCacheProvider>();                    
+                
+                
+                else
+                    x.Provider<NHibernate.Cache.HashtableCacheProvider>();       
+                    
                 
 
                     
@@ -84,7 +89,9 @@ namespace DomainMapping
                 x.UseQueryCache = true;
             });
 
-            cfg.SetInterceptor(new NHSQLInterceptor());
+
+            if (useUnitTest)
+                cfg.SetInterceptor(new NHSQLInterceptor());
 
             var sf = cfg.BuildSessionFactory();
                                     
