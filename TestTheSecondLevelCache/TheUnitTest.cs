@@ -247,7 +247,8 @@ namespace TestTheSecondLevelCache
         {
             var sf = Common.BuildSessionFactory();
 
-            // I don't know why this problem says the second query with just different OrderBy from the first query receives cached results of first query
+            // I don't know why this problem says the second query with just different OrderBy from the first query receives cached results of first query,
+            // it doesn't. The second query (with different OrderBy) doesn't get the result of the first query
             // http://stackoverflow.com/questions/10725241/nhibernate-retrieves-cached-query-results-even-though-the-order-by-clause-differ
 
 
