@@ -1,4 +1,4 @@
-﻿using System;
+﻿
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using NHibernate;
@@ -7,6 +7,10 @@ using NHibernate.Linq;
 using Domain;
 
 using System.Linq;
+
+
+using DomainMapping;
+using System;
 
 namespace TestTheSecondLevelCache
 {
@@ -662,6 +666,48 @@ namespace TestTheSecondLevelCache
                 var list = session.Query<Person>().OrderBy(x => x.FirstName).Cacheable().ToList();
             }
 
+        }
+
+
+
+
+        [TestMethod]
+        public void Test_Evict()
+        {
+            var sf = Common.BuildSessionFactory();
+
+
+            sf.Evict(typeof(Person), 1);
+        }
+
+
+        [TestMethod]
+        public void Test_Translation()
+        {
+            var sf = Common.BuildSessionFactory();
+
+
+            Action doSomething = delegate
+            {
+                using (var session = sf.OpenSession().SetLanguageCultureCode("en-us"))
+                using (var tx = session.BeginTransaction())
+                {
+                    var tl =
+                            from t in session.Query<ThingTranslation>().Cacheable()
+                            select t;
+
+                    tl.ToList();
+
+                }
+            };
+
+            doSomething();
+
+            doSomething();
+
+            
+
+            
         }
         
 

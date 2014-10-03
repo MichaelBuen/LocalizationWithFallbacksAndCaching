@@ -35,7 +35,12 @@ namespace DomainMapping
             mapper.AddMappings(new[]
                 {
                     typeof(PersonMapping),
-                    typeof(OrderMapping)
+                    typeof(OrderMapping),
+
+                    typeof(ThingMapping),
+                    typeof(ThingTranslationMapping),
+
+                    typeof(LanguageCultureMapping)
                 });
 
 
@@ -121,9 +126,6 @@ namespace DomainMapping
             }
 
         }
-
-
-
 
         public static string NHibernateSQL { get; set; }
 

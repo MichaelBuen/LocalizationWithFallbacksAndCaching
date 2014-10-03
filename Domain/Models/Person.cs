@@ -8,8 +8,8 @@ namespace Domain
 {
     public class Person
     {
-        public virtual int PersonId { get; set; }
-        public virtual string FirstName { get; set; }
-        public virtual string LastName { get; set; }
+        public int PersonId { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
     }
 }

@@ -51,9 +51,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helper.cs" />
     <Compile Include="Mapper.cs" />
+    <Compile Include="Mappings\LanguageCultureMapping.cs" />
     <Compile Include="Mappings\OrderMapping.cs" />
     <Compile Include="Mappings\PersonMapping.cs" />
+    <Compile Include="Mappings\Thing.cs" />
+    <Compile Include="Mappings\ThingMapping.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
