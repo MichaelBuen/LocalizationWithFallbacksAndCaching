@@ -1,14 +1,10 @@
 ﻿using DomainMapping.Mappings;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 
-using NHibernate;
+
 using NHibernate.Cfg;
-using NHibernate.Type;
+
 
 namespace DomainMapping
 {
@@ -45,6 +41,8 @@ namespace DomainMapping
 
 
             var cfg = new NHibernate.Cfg.Configuration();
+
+            // .DatabaseIntegration! Y U EXTENSION METHOD?
             cfg.DataBaseIntegration(c =>
             {
                 c.Driver<NHibernate.Driver.SqlClientDriver>();
@@ -61,9 +59,9 @@ namespace DomainMapping
 
 
             var filterDef = new NHibernate.Engine.FilterDefinition("lf", /*default condition*/ null,
-                                                                   new Dictionary<string, IType>
+                                                                   new Dictionary<string, NHibernate.Type.IType>
                                                                        {
-                                                                           { "LanguageCultureCode", NHibernateUtil.String}
+                                                                           { "LanguageCultureCode", NHibernate.NHibernateUtil.String}
                                                                        }, useManyToOne: false);
 
             cfg.AddFilterDefinition(filterDef);
@@ -115,7 +113,7 @@ namespace DomainMapping
             return sf;
         }
 
-        public class NHSQLInterceptor : EmptyInterceptor, IInterceptor
+        class NHSQLInterceptor : NHibernate.EmptyInterceptor 
         {
             // http://stackoverflow.com/questions/2134565/how-to-configure-fluent-nhibernate-to-output-queries-to-trace-or-debug-instead-o
             public override NHibernate.SqlCommand.SqlString OnPrepareStatement(NHibernate.SqlCommand.SqlString sql)
@@ -130,7 +128,7 @@ namespace DomainMapping
         public static string NHibernateSQL { get; set; }
 
 
-    }
+    } // Mapper
 
 
     
