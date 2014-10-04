@@ -1,9 +1,14 @@
 ﻿using DomainMapping.Mappings;
-using System.Collections.Generic;
 
 
 
 using NHibernate.Cfg;
+
+
+using System.Collections.Generic;
+
+
+
 
 
 namespace DomainMapping

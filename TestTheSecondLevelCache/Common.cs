@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace TestTheSecondLevelCache
 {
-    public class Common
+    public static class Common
     {
         // This is not working though:
         // http://stackoverflow.com/questions/700043/mstest-executing-all-my-tests-simultaneously-breaks-tests-what-to-do
