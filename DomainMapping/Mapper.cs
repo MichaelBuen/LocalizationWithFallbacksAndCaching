@@ -10,8 +10,8 @@ namespace DomainMapping
 {
     public static class Mapper
     {
-        
-        
+
+
         static NHibernate.ISessionFactory _sessionFactory = Mapper.BuildSessionFactory();
 
 
@@ -21,7 +21,7 @@ namespace DomainMapping
             get { return _sessionFactory; }
         }
 
-        
+
         // Call this on unit testing, so we can test caching on each test method independently
         public static NHibernate.ISessionFactory BuildSessionFactory(bool useUnitTest = false)
         {
@@ -45,11 +45,17 @@ namespace DomainMapping
             // .DatabaseIntegration! Y U EXTENSION METHOD?
             cfg.DataBaseIntegration(c =>
             {
+                // SQL Server
                 c.Driver<NHibernate.Driver.SqlClientDriver>();
                 c.Dialect<NHibernate.Dialect.MsSql2008Dialect>();
                 c.ConnectionString = "Server=.;Database=LocalizationWithFallbacksAndCaching;Trusted_Connection=True";
 
-                c.LogSqlInConsole = true;                
+                // // PostgreSQL
+                // c.Driver<NHibernate.Driver.NpgsqlDriver>();
+                // c.Dialect<NHibernate.Dialect.PostgreSQLDialect>();
+                // c.ConnectionString = "Server=.; Database=test_the_database; User=postgres; password=opensesame";				
+
+                c.LogSqlInConsole = true;
                 c.LogFormattedSql = true;
             });
 
@@ -69,22 +75,24 @@ namespace DomainMapping
 
             cfg.Cache(x =>
             {
-
-                // This is more stable in unit testing
+                // SysCache is not stable on unit testing
                 if (!useUnitTest)
-                    x.Provider<NHibernate.Caches.SysCache.SysCacheProvider>();                    
+                {
+                    x.Provider<NHibernate.Caches.SysCache.SysCacheProvider>();
 
-                // I don't know why SysCacheProvider has problem on simultaneous unit testing, 
-                // might be SysCacheProvider is just giving one session factory, so simultaneous test see each other caches
-                // This solution doesn't work: http://stackoverflow.com/questions/700043/mstest-executing-all-my-tests-simultaneously-breaks-tests-what-to-do
-                
-                
+                    // I don't know why SysCacheProvider is not stable on simultaneous unit testing, 
+                    // might be SysCacheProvider is just giving one session factory, so simultaneous test see each other caches
+                    // This solution doesn't work: http://stackoverflow.com/questions/700043/mstest-executing-all-my-tests-simultaneously-breaks-tests-what-to-do					
+                }
                 else
-                    x.Provider<NHibernate.Cache.HashtableCacheProvider>();       
-                    
-                
+                {
+                    // This is more stable in unit testing
+                    x.Provider<NHibernate.Cache.HashtableCacheProvider>();
+                }
 
-                    
+
+
+
 
                 // http://stackoverflow.com/questions/2365234/how-does-query-caching-improves-performance-in-nhibernate
 
@@ -97,8 +105,8 @@ namespace DomainMapping
                 cfg.SetInterceptor(new NHSQLInterceptor());
 
             var sf = cfg.BuildSessionFactory();
-                                    
-            
+
+
 
 
             //using (var file = new System.IO.FileStream(@"c:\x\ddl.txt",
@@ -113,7 +121,7 @@ namespace DomainMapping
             return sf;
         }
 
-        class NHSQLInterceptor : NHibernate.EmptyInterceptor 
+        class NHSQLInterceptor : NHibernate.EmptyInterceptor
         {
             // http://stackoverflow.com/questions/2134565/how-to-configure-fluent-nhibernate-to-output-queries-to-trace-or-debug-instead-o
             public override NHibernate.SqlCommand.SqlString OnPrepareStatement(NHibernate.SqlCommand.SqlString sql)
@@ -131,5 +139,5 @@ namespace DomainMapping
     } // Mapper
 
 
-    
+
 }
